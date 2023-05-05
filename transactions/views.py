@@ -35,10 +35,13 @@ def approval_credit_view(request):
             credit = form.save(commit=False)
             if credit.approval == True:
                 #send document to user email
-
                 credit.save()
-                credit.user.account.balance += credit.amount
-                credit.user.account.save()
+                try: 
+                    credit.user.account.balance += credit.amount
+                    credit.user.account.save()
+                except ObjectDoesNotExist:
+                    pass
+                return redirect("transactions:approval_credit")
 
     context = {
         "title": "Credits to approve",
@@ -91,10 +94,14 @@ def approval_withdrawal_view(request):
             if withdrawal.approval == True:
                 #send document to user email
                 withdrawal.save()
-                withdrawal.user.account.balance -= withdrawal.amount
-                withdrawal.user.account.save()
+                try: 
+                    withdrawal.user.account.balance += withdrawal.amount
+                    withdrawal.user.account.save()
+                except ObjectDoesNotExist:
+                    pass
+                return redirect("transactions:approval_withdrawal")
     context = {
-        "title": "Credits to approve",
+        "title": "Withdraw to approve",
         "formset": formset,
     }
     return render(request, "transactions/formset.html", context)
@@ -108,7 +115,6 @@ def deposit_view(request):
         deposit = form.save(commit=False)
         deposit.user = request.user
         deposit.save()
-        # adds users deposit to balance.
         messages.success(request, 'You Have Deposited {} $.'
                          .format(deposit.amount))
         return redirect("home")
@@ -128,9 +134,6 @@ def credit_view(request):
         credit = form.save(commit=False)
         credit.user = request.user
         credit.save()
-        # adds users credit to balance.
-        credit.user.account.balance += credit.amount
-        credit.user.account.save()
         messages.success(request, 'You Have credited {} $.'
                          .format(credit.amount))
         return redirect("home")
@@ -150,10 +153,6 @@ def withdrawal_view(request):
         withdrawal = form.save(commit=False)
         withdrawal.user = request.user
         withdrawal.save()
-        # subtracts users withdrawal from balance.
-        withdrawal.user.account.balance -= withdrawal.amount
-        withdrawal.user.account.save()
-
         messages.success(
             request, 'You Have Withdrawn {} $.'.format(withdrawal.amount)
         )
